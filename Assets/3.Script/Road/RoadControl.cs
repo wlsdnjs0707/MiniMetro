@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public enum RoadType
 {
     Straight, // 직진 도로
     Corner, // 코너 도로
     Intersection, // 교차로
-    BuildingTile // 건물 밑에 설치될 도로
+    BuildingTile, // 건물 밑에 설치될 도로
+    Test // 선 없는 기본 타일
 }
 
 public enum ClickState
@@ -16,8 +18,35 @@ public enum ClickState
     Create // 도로를 그리는 중
 }
 
+[Serializable]
+public struct Coordinate
+{
+    public float x;
+    public float z;
+
+    public Coordinate(float x, float z)
+    {
+        this.x = x;
+        this.z = z;
+    }
+}
+
 public class RoadControl : MonoBehaviour
 {
+    public static RoadControl instance;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     [Header("Ground Layer")]
     public LayerMask groundLayer;
 
@@ -32,23 +61,13 @@ public class RoadControl : MonoBehaviour
     public Vector3 startPoint = Vector3.zero;
     public Vector3 endPoint = Vector3.zero;
 
-    // Spawn Road
-    private List<Coordinate> roads = new List<Coordinate>();
+    [Header("Spawn Road")]
+    public List<Coordinate> roads = new List<Coordinate>();
     private List<Coordinate> coordinates = new List<Coordinate>();
     private int roadCountX = 0;
     private int roadCountZ = 0;
 
-    public struct Coordinate
-    {
-        public float x;
-        public float z;
-
-        public Coordinate(float x, float z)
-        {
-            this.x = x;
-            this.z = z;
-        }
-    }
+    
 
     private void Update()
     {
@@ -127,58 +146,78 @@ public class RoadControl : MonoBehaviour
     private void MeasureRoad() // startPoint 부터 endPoint 까지 생성할 도로의 위치를 계산하여 저장
     {
         // 도로 하나의 길이 지정 (정사각형)
-        float roadWidth = 5.0f;
+        float roadWidth = 2.5f;
 
         // 필요 도로 개수 계산
         roadCountX = (int)(Mathf.Abs(startPoint.x - endPoint.x) / roadWidth) + 1;
         roadCountZ = (int)(Mathf.Abs(startPoint.z - endPoint.z) / roadWidth) + 1;
 
         #region 방향에 따라 체크
-        // ( \ 방향 )
+        // ( ↘ 방향 )
         // start.x < end.x
         // start.z > end.z
         if (startPoint.x < endPoint.x && startPoint.z > endPoint.z)
         {
-            for (float i = startPoint.x; i <= endPoint.x; i += 2.5f)
+            for (float i = startPoint.x; i <= endPoint.x; i += 1.25f)
             {
                 Check_Test(i);
             }
+
+            for (float j = startPoint.z; j >= endPoint.z; j -= 1.25f)
+            {
+                Check_Test_Z(j);
+            }
         }
-        // ( / 방향 )
+        // ( ↗ 방향 )
         // start.x < end.x
         // start.z < end.z
         else if (startPoint.x < endPoint.x && startPoint.z < endPoint.z)
         {
-            for (float i = startPoint.x; i <= endPoint.x; i += 2.5f)
+            for (float i = startPoint.x; i <= endPoint.x; i += 1.25f)
             {
                 Check_Test(i);
             }
+
+            for (float j = startPoint.z; j <= endPoint.z; j += 1.25f)
+            {
+                Check_Test_Z(j);
+            }
         }
-        // ( \ 방향 )
+        // ( ↖ 방향 )
         // start.x > end.x
         // start.z > end.z
         else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
         {
-            for (float i = startPoint.x; i >= endPoint.x; i -= 2.5f)
+            for (float i = startPoint.x; i >= endPoint.x; i -= 1.25f)
             {
                 Check_Test(i);
             }
+
+            for (float j = startPoint.z; j >= endPoint.z; j -= 1.25f)
+            {
+                Check_Test_Z(j);
+            }
         }
-        // ( / 방향 )
+        // ( ↙ 방향 )
         // start.x > end.x
         // start.z < end.z
         else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
         {
-            for (float i = startPoint.x; i >= endPoint.x; i -= 2.5f)
+            for (float i = startPoint.x; i >= endPoint.x; i -= 1.25f)
             {
                 Check_Test(i);
+            }
+
+            for (float j = startPoint.z; j <= endPoint.z; j += 1.25f)
+            {
+                Check_Test_Z(j);
             }
         }
         // ( - 방향 )
         // start.x < end.x
         else if (startPoint.x < endPoint.x && startPoint.z == endPoint.z)
         {
-            for (float i = startPoint.x; i <= endPoint.x; i += 5.0f)
+            for (float i = startPoint.x; i <= endPoint.x; i += 2.5f)
             {
                 Check_Straight(i, startPoint.z);
             }
@@ -187,7 +226,7 @@ public class RoadControl : MonoBehaviour
         // start.x > end.x
         else if (startPoint.x > endPoint.x && startPoint.z == endPoint.z)
         {
-            for (float i = startPoint.x; i >= endPoint.x; i -= 5.0f)
+            for (float i = startPoint.x; i >= endPoint.x; i -= 2.5f)
             {
                 Check_Straight(i, startPoint.z);
             }
@@ -196,7 +235,7 @@ public class RoadControl : MonoBehaviour
         // start.z < end.z
         else if (startPoint.z < endPoint.z && startPoint.x == endPoint.x)
         {
-            for (float j = startPoint.z; j <= endPoint.z; j += 5.0f)
+            for (float j = startPoint.z; j <= endPoint.z; j += 2.5f)
             {
                 Check_Straight(startPoint.x, j);
             }
@@ -205,12 +244,17 @@ public class RoadControl : MonoBehaviour
         // start.z > end.z
         else if (startPoint.z > endPoint.z && startPoint.x == endPoint.x)
         {
-            for (float j = startPoint.z; j >= endPoint.z; j -= 5.0f)
+            for (float j = startPoint.z; j >= endPoint.z; j -= 2.5f)
             {
                 Check_Straight(startPoint.x, j);
             }
         }
         #endregion
+
+        if (roadCountX == roadCountZ)
+        {
+            Check_Additonal_Diagonal();
+        }
 
         SpawnRoad(coordinates);
     }
@@ -223,7 +267,7 @@ public class RoadControl : MonoBehaviour
         float j = a * i + b;
 
         // x, z가 모두 중앙을 지날 때
-        if (i % 5.0f == 0 && j % 5.0f == 0)
+        if (i % 2.5f == 0 && j % 2.5f == 0)
         {
             Coordinate currentCord = new Coordinate();
             currentCord.x = i;
@@ -231,28 +275,28 @@ public class RoadControl : MonoBehaviour
             coordinates.Add(currentCord);
         }
         // x는 중앙을, z는 경계를 지날 때 
-        else if (i % 5.0f == 0 && j % 2.5 == 0)
+        else if (i % 2.5f == 0 && j % 1.25 == 0)
         {
             Coordinate currentCord = new Coordinate();
             currentCord.x = i;
-            currentCord.z = j - 2.5f;
+            currentCord.z = j - 1.25f;
             coordinates.Add(currentCord);
 
             Coordinate currentCord2 = new Coordinate();
             currentCord2.x = i;
-            currentCord2.z = j + 2.5f;
+            currentCord2.z = j + 1.25f;
             coordinates.Add(currentCord2);
         }
         // x는 중앙을, z는 애매할 때
-        else if (i % 5.0f == 0)
+        else if (i % 2.5f == 0)
         {
             float newZPoint = 0;
 
             if (startPoint.z < endPoint.z)
             {
-                for (float t = startPoint.z; t <= endPoint.z; t += 5.0f)
+                for (float t = startPoint.z; t <= endPoint.z; t += 2.5f)
                 {
-                    if (Mathf.Abs(j - t) < 2.5f)
+                    if (Mathf.Abs(j - t) < 1.25f)
                     {
                         newZPoint = t;
                         break;
@@ -261,9 +305,9 @@ public class RoadControl : MonoBehaviour
             }
             else
             {
-                for (float t = startPoint.z; t >= endPoint.z; t -= 5.0f)
+                for (float t = startPoint.z; t >= endPoint.z; t -= 2.5f)
                 {
-                    if (Mathf.Abs(j - t) < 2.5f)
+                    if (Mathf.Abs(j - t) < 1.25f)
                     {
                         newZPoint = t;
                         break;
@@ -276,16 +320,29 @@ public class RoadControl : MonoBehaviour
             currentCord.z = newZPoint;
             coordinates.Add(currentCord);
         }
+        // x가 경계를, z는 중앙을 지날 때
+        else if (i % 1.25f == 0 && j % 2.5f == 0)
+        {
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = i - 1.25f;
+            currentCord.z = j;
+            coordinates.Add(currentCord);
+
+            Coordinate currentCord2 = new Coordinate();
+            currentCord2.x = i + 1.25f;
+            currentCord2.z = j;
+            coordinates.Add(currentCord2);
+        }
         // x가 경계를, z는 애매할 때
-        else if (i % 2.5f == 0 && j % 2.5f != 0)
+        else if (i % 1.25f == 0 && j % 1.25f != 0)
         {
             float newZPoint = 0;
 
             if (startPoint.z < endPoint.z)
             {
-                for (float t = startPoint.z; t <= endPoint.z; t += 5.0f)
+                for (float t = startPoint.z; t <= endPoint.z; t += 2.5f)
                 {
-                    if (Mathf.Abs(j - t) < 2.5f)
+                    if (Mathf.Abs(j - t) < 1.25f)
                     {
                         newZPoint = t;
                         break;
@@ -294,9 +351,9 @@ public class RoadControl : MonoBehaviour
             }
             else
             {
-                for (float t = startPoint.z; t >= endPoint.z; t -= 5.0f)
+                for (float t = startPoint.z; t >= endPoint.z; t -= 2.5f)
                 {
-                    if (Mathf.Abs(j - t) < 2.5f)
+                    if (Mathf.Abs(j - t) < 1.25f)
                     {
                         newZPoint = t;
                         break;
@@ -305,24 +362,163 @@ public class RoadControl : MonoBehaviour
             }
 
             Coordinate currentCord = new Coordinate();
-            currentCord.x = i - 2.5f;
+            currentCord.x = i - 1.25f;
             currentCord.z = newZPoint;
             coordinates.Add(currentCord);
 
             Coordinate currentCord2 = new Coordinate();
-            currentCord2.x = i + 2.5f;
+            currentCord2.x = i + 1.25f;
             currentCord2.z = newZPoint;
+            coordinates.Add(currentCord2);
+        }
+        // 둘다 경계를 지날 때
+        else if (i % 1.25f == 0 && j % 1.25f == 0)
+        {
+            Check_Additonal_Else(i, j);
+        }
+    }
+
+    private void Check_Test_Z(float j)
+    {
+        // 시작점과 끝점을 잇는 직선위의 점들만 검사
+        float a = (endPoint.z - startPoint.z) / (endPoint.x - startPoint.x);
+        float b = startPoint.z - a * startPoint.x;
+        float i = (j - b) / a;
+
+        if (j % 1.25f == 0 && (j / 1.25f) % 2 != 0 && i % 1.25f != 0)
+        {
+            float newXPoint = 0;
+
+            if (startPoint.x < endPoint.x)
+            {
+                for (float t = startPoint.x; t <= endPoint.x; t += 2.5f)
+                {
+                    if (Mathf.Abs(i - t) < 1.25f)
+                    {
+                        newXPoint = t;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (float t = startPoint.x; t >= endPoint.x; t -= 2.5f)
+                {
+                    if (Mathf.Abs(i - t) < 1.25f)
+                    {
+                        newXPoint = t;
+                        break;
+                    }
+                }
+            }
+
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = newXPoint;
+            currentCord.z = j - 1.25f;
+            coordinates.Add(currentCord);
+
+            Coordinate currentCord2 = new Coordinate();
+            currentCord2.x = newXPoint;
+            currentCord2.z = j + 1.25f;
             coordinates.Add(currentCord2);
         }
     }
 
     private void Check_Straight(float i, float j)
     {
-        if (i % 5.0f == 0 && j % 5.0f == 0) // 점이 칸의 정 중앙을 지날 때 해당 칸 체크
+        if (i % 2.5f == 0 && j % 2.5f == 0) // 점이 칸의 정 중앙을 지날 때 해당 칸 체크
         {
             Coordinate currentCord = new Coordinate();
             currentCord.x = i;
             currentCord.z = j;
+            coordinates.Add(currentCord);
+        }
+    }
+
+    private void Check_Additonal_Diagonal()
+    {
+        // ( ↘ 방향 )
+        if (startPoint.x < endPoint.x && startPoint.z > endPoint.z)
+        {
+            for (int n = 0; n < roadCountX - 1; n++)
+            {
+                Coordinate currentCord = new Coordinate();
+                currentCord.x = startPoint.x + 2.5f * (n + 1);
+                currentCord.z = startPoint.z - 2.5f * n;
+                coordinates.Add(currentCord);
+            }
+        }
+        // ( ↗ 방향 )
+        else if (startPoint.x < endPoint.x && startPoint.z < endPoint.z)
+        {
+            for (int n = 0; n < roadCountX - 1; n++)
+            {
+                Coordinate currentCord = new Coordinate();
+                currentCord.x = startPoint.x + 2.5f * (n + 1);
+                currentCord.z = startPoint.z + 2.5f * n;
+                coordinates.Add(currentCord);
+            }
+        }
+        // ( ↖ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
+        {
+            for (int n = 0; n < roadCountX - 1; n++)
+            {
+                Coordinate currentCord = new Coordinate();
+                currentCord.x = startPoint.x - 2.5f * (n + 1);
+                currentCord.z = startPoint.z + 2.5f * n;
+                coordinates.Add(currentCord);
+            }
+        }
+        // ( ↙ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
+        {
+            for (int n = 0; n < roadCountX - 1; n++)
+            {
+                Coordinate currentCord = new Coordinate();
+                currentCord.x = startPoint.x - 2.5f * (n + 1);
+                currentCord.z = startPoint.z - 2.5f * n;
+                coordinates.Add(currentCord);
+            }
+        }
+    }
+
+    private void Check_Additonal_Else(float i, float j)
+    {
+        // ( ↘ 방향 )
+        if (startPoint.x < endPoint.x && startPoint.z > endPoint.z)
+        {
+            //Debug.Log("↘");
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = i + 1.25f;
+            currentCord.z = j + 1.25f;
+            coordinates.Add(currentCord);
+        }
+        // ( ↗ 방향 )
+        else if (startPoint.x < endPoint.x && startPoint.z < endPoint.z)
+        {
+            //Debug.Log("↗");
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = i - 1.25f;
+            currentCord.z = j + 1.25f;
+            coordinates.Add(currentCord);
+        }
+        // ( ↖ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
+        {
+            //Debug.Log("↖");
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = i + 1.25f;
+            currentCord.z = j + 1.25f;
+            coordinates.Add(currentCord);
+        }
+        // ( ↙ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
+        {
+            //Debug.Log("↙");
+            Coordinate currentCord = new Coordinate();
+            currentCord.x = i - 1.25f;
+            currentCord.z = j + 1.25f;
             coordinates.Add(currentCord);
         }
     }
@@ -334,7 +530,9 @@ public class RoadControl : MonoBehaviour
             if (!roads.Contains(coordinates[i])) // 해당 위치에 이미 도로가 생성되어있는지 체크
             {
                 roads.Add(coordinates[i]);
-                Instantiate(roadPrefabs[4], new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
+                GameObject currentRoad = Instantiate(roadPrefabs[4], new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
+                currentRoad.GetComponent<Road>().coordinate.x = coordinates[i].x;
+                currentRoad.GetComponent<Road>().coordinate.z = coordinates[i].z;
             }
         }
         
