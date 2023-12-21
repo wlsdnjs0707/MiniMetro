@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public enum RoadType
 {
@@ -57,7 +58,6 @@ public class RoadControl : MonoBehaviour
     public ClickState currentClickState = ClickState.None;
 
     [Header("Point")]
-    //private Vector3 mousePosition;
     public Vector3 startPoint = Vector3.zero;
     public Vector3 endPoint = Vector3.zero;
 
@@ -67,7 +67,7 @@ public class RoadControl : MonoBehaviour
     private int roadCountX = 0;
     private int roadCountZ = 0;
 
-    
+    public event Action OnRoadCreated;
 
     private void Update()
     {
@@ -95,7 +95,7 @@ public class RoadControl : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            if (hit.collider.CompareTag("Building")) // 건물 위에서 마우스 클릭
+            if (hit.collider.CompareTag("Building") || hit.collider.CompareTag("Road")) // 마우스 클릭
             {
                 if (currentClickState == ClickState.None) // 도로 그리기 시작할 건물 선택 (도로 그리기 시작)
                 {
@@ -115,7 +115,7 @@ public class RoadControl : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            if (hit.collider.CompareTag("Building")) // 건물 위에서 마우스 떼기
+            if (hit.collider.CompareTag("Building") || hit.collider.CompareTag("Road")) // 마우스 떼기
             {
                 endPoint = hit.collider.gameObject.transform.position;
 
@@ -129,6 +129,9 @@ public class RoadControl : MonoBehaviour
                 if (currentClickState == ClickState.Create) // 도로를 연결할 건물 선택 (도로 생성)
                 {
                     currentClickState = ClickState.None;
+
+                    //Debug.Log("그리기 완료");
+                    //Road_Optimize(3);
                     MeasureRoad();
                 }
             }
@@ -141,6 +144,140 @@ public class RoadControl : MonoBehaviour
                 }
             }
         }
+
+        OnRoadCreated?.Invoke();
+    }
+
+    private void Road_Optimize(int n) // start와 end의 주위 n칸에 이미 이어진 도로가 있는지 확인후 연결
+    {
+        float startX = startPoint.x;
+        float startZ = startPoint.z;
+
+        float endX = endPoint.x;
+        float endZ = endPoint.z;
+
+        // ( ↘ 방향 )
+        if (startPoint.x < endPoint.x && startPoint.z > endPoint.z)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(startPoint.x + i * 2.5f, startPoint.z - j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        startX = startPoint.x + i * 2.5f;
+                        startZ = startPoint.z - j * 2.5f;
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(endPoint.x - i * 2.5f, endPoint.z + j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        endX = endPoint.x - i * 2.5f;
+                        endZ = endPoint.z + j * 2.5f;
+                    }
+                }
+            }
+        }
+        // ( ↗ 방향 )
+        else if (startPoint.x < endPoint.x && startPoint.z < endPoint.z)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(startPoint.x + i * 2.5f, startPoint.z + j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        startX = startPoint.x + i * 2.5f;
+                        startZ = startPoint.z + j * 2.5f;
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(endPoint.x - i * 2.5f, endPoint.z - j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        endX = endPoint.x - i * 2.5f;
+                        endZ = endPoint.z - j * 2.5f;
+                    }
+                }
+            }
+        }
+        // ( ↖ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(startPoint.x - i * 2.5f, startPoint.z + j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        startX = startPoint.x - i * 2.5f;
+                        startZ = startPoint.z + j * 2.5f;
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(endPoint.x + i * 2.5f, endPoint.z - j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        endX = endPoint.x + i * 2.5f;
+                        endZ = endPoint.z - j * 2.5f;
+                    }
+                }
+            }
+        }
+        // ( ↙ 방향 )
+        else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(startPoint.x - i * 2.5f, startPoint.z - j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        startX = startPoint.x - i * 2.5f;
+                        startZ = startPoint.z - j * 2.5f;
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Coordinate nextCoordinate = new Coordinate(endPoint.x + i * 2.5f, endPoint.z + j * 2.5f);
+                    if (RoadControl.instance.roads.Contains(nextCoordinate))
+                    {
+                        endX = endPoint.x + i * 2.5f;
+                        endZ = endPoint.z + j * 2.5f;
+                    }
+                }
+            }
+        }
+
+        startPoint.x = startX;
+        startPoint.z = startZ;
+
+        endPoint.x = endX;
+        endPoint.z = endZ;
     }
 
     private void MeasureRoad() // startPoint 부터 endPoint 까지 생성할 도로의 위치를 계산하여 저장
@@ -256,7 +393,20 @@ public class RoadControl : MonoBehaviour
             Check_Additonal_Diagonal();
         }
 
-        SpawnRoad(coordinates);
+        if (GameManager.instance.CheckCanReach(startPoint.x, startPoint.z, endPoint.x, endPoint.z, roads, out int count_original))
+        {
+            // 비교 시작
+            GameManager.instance.CheckCanReach(startPoint.x, startPoint.z, endPoint.x, endPoint.z, coordinates, out int count_new);
+
+            if (count_original > count_new)
+            {
+                SpawnRoad(coordinates);
+            }
+        }
+        else
+        {
+            SpawnRoad(coordinates);
+        }
     }
 
     private void Check_Test(float i)
@@ -372,7 +522,7 @@ public class RoadControl : MonoBehaviour
             coordinates.Add(currentCord2);
         }
         // 둘다 경계를 지날 때
-        else if (i % 1.25f == 0 && j % 1.25f == 0)
+        else if ((roadCountX != roadCountZ) && (i % 1.25f == 0) && (j % 1.25f == 0))
         {
             Check_Additonal_Else(i, j);
         }
@@ -460,7 +610,7 @@ public class RoadControl : MonoBehaviour
             }
         }
         // ( ↖ 방향 )
-        else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
+        else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
         {
             for (int n = 0; n < roadCountX - 1; n++)
             {
@@ -471,7 +621,7 @@ public class RoadControl : MonoBehaviour
             }
         }
         // ( ↙ 방향 )
-        else if (startPoint.x > endPoint.x && startPoint.z < endPoint.z)
+        else if (startPoint.x > endPoint.x && startPoint.z > endPoint.z)
         {
             for (int n = 0; n < roadCountX - 1; n++)
             {
@@ -531,11 +681,47 @@ public class RoadControl : MonoBehaviour
             {
                 roads.Add(coordinates[i]);
                 GameObject currentRoad = Instantiate(roadPrefabs[4], new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
+                currentRoad.transform.SetParent(transform);
                 currentRoad.GetComponent<Road>().coordinate.x = coordinates[i].x;
                 currentRoad.GetComponent<Road>().coordinate.z = coordinates[i].z;
             }
         }
-        
+
+        // 도로 최적화
+        //DeleteOverlapRoad();
+
         coordinates.Clear();
+    }
+
+    private void DeleteOverlapRoad() // 목적지까지 도로를 연결했을때 굳이 필요없는 도로를 제거
+    {
+        foreach (Coordinate coordinate in coordinates)
+        {
+            if (((coordinate.x == startPoint.x) && (coordinate.z == startPoint.z)) || ((coordinate.x == endPoint.x) && (coordinate.z == endPoint.z)))
+            {
+                continue;
+            }
+
+            roads.Remove(coordinate);
+
+            if (GameManager.instance.CheckCanReach(startPoint.x, startPoint.z, endPoint.x, endPoint.z, roads, out int temp))
+            {
+                //Debug.Log($"{coordinate.x},{coordinate.z}의 도로 제거");
+
+                for (int i = 0; i < transform.childCount; i++)
+                {
+                    if ((transform.GetChild(i).GetComponent<Road>().coordinate.x == coordinate.x) && (transform.GetChild(i).GetComponent<Road>().coordinate.z == coordinate.z))
+                    {
+                        roads.Remove(coordinate);
+                        Destroy(transform.GetChild(i).gameObject);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                roads.Add(coordinate);
+            }
+        }
     }
 }

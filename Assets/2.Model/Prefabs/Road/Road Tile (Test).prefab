@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 4199163040435481762}
   - component: {fileID: 4199163040434384482}
   - component: {fileID: -1476528020970028082}
+  - component: {fileID: 8071276382664637156}
   m_Layer: 0
   m_Name: Road Tile (Test)
-  m_TagString: Untagged
+  m_TagString: Road
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -104,3 +105,16 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 11b7c9a58a603e74caec54e139efb58d, type: 3}
   - {fileID: 4300000, guid: 7b654bd76adcefd44b4799d4290822fb, type: 3}
   - {fileID: 4300000, guid: 7b654bd76adcefd44b4799d4290822fb, type: 3}
+--- !u!65 &8071276382664637156
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4199163040436383906}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 20, y: 0.0000008742278, z: 20}
+  m_Center: {x: 0, y: 0, z: 0}

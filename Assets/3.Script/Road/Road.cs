@@ -11,9 +11,13 @@ public class Road : MonoBehaviour
     [Header("Road Prefab")]
     [SerializeField] private Mesh[] roadMeshs; // <Index> 0:Straight, 1:Corner, 2:Intersection, 3:BuildingTile, 4:Test
 
-    private void Update()
+    private void Start()
     {
-        ChangeType();
+        // 길 생성 이벤트에 ChangeType 메서드 등록
+        RoadControl.instance.OnRoadCreated += ChangeType;
+
+        // 최초 생성시 호출
+        Invoke("ChangeType", 0.01f);
     }
 
     private void ChangeType()
