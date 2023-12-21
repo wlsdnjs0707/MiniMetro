@@ -7,6 +7,7 @@ TagManager:
   - Ground
   - Building
   - Road
+  - Temp
   layers:
   - Default
   - TransparentFX
