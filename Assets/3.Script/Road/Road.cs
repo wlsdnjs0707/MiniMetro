@@ -20,6 +20,12 @@ public class Road : MonoBehaviour
         Invoke("ChangeType", 0.01f);
     }
 
+    private void OnDestroy()
+    {
+        // 길 제거될때 등록한 이벤트도 제거
+        RoadControl.instance.OnRoadCreated -= ChangeType;
+    }
+
     private void ChangeType()
     {
         // 상하좌우 체크용 인덱스
