@@ -52,7 +52,8 @@ public class RoadControl : MonoBehaviour
     public LayerMask groundLayer;
 
     [Header("Road Prefab")]
-    [SerializeField] private GameObject[] roadPrefabs; // <Index> 0:Straight, 1:Corner, 2:Intersection, 3:BuildingTile
+    [SerializeField] private GameObject roadPrefab;
+    [SerializeField] private GameObject tempRoadPrefab;
 
     [Header("Click State")]
     public ClickState currentClickState = ClickState.None;
@@ -66,6 +67,10 @@ public class RoadControl : MonoBehaviour
     private List<Coordinate> coordinates = new List<Coordinate>();
     private int roadCountX = 0;
     private int roadCountZ = 0;
+
+    [Header("Parents")]
+    [SerializeField] private Transform roadParent;
+    [SerializeField] private Transform tempParent;
 
     public event Action OnRoadCreated;
 
@@ -97,9 +102,9 @@ public class RoadControl : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            if (hit.collider.CompareTag("Road")) // 마우스 클릭
+            if (hit.collider.CompareTag("Road") && hit.collider.GetComponent<Road>().roadType == RoadType.BuildingTile) // 마우스 클릭
             {
-                if (hit.collider.GetComponent<Road>().roadType == RoadType.BuildingTile)
+                if (GameManager.instance.roadCount > 0)
                 {
                     if (currentClickState == ClickState.None) // 도로 그리기 시작할 건물 선택 (도로 그리기 시작)
                     {
@@ -108,6 +113,11 @@ public class RoadControl : MonoBehaviour
                         //Debug.Log("그리기 시작");
                     }
                 }
+                else
+                {
+                    // UI 띄우기 (도로 개수가 부족합니다)
+                }
+                
             }
         }
     }
@@ -122,36 +132,35 @@ public class RoadControl : MonoBehaviour
         {
             if (hit.collider.CompareTag("Road")) // 마우스 떼기
             {
-                if (hit.collider.GetComponent<Road>().roadType == RoadType.BuildingTile)
+                endPoint = hit.collider.gameObject.transform.position;
+
+                if (startPoint == endPoint)
                 {
-                    endPoint = hit.collider.gameObject.transform.position;
+                    currentClickState = ClickState.None;
+                    //Debug.Log("그리기 취소");
+                    return;
+                }
 
-                    if (startPoint == endPoint)
+                if (currentClickState == ClickState.Create) // 도로를 연결할 건물 선택 (도로 생성)
+                {
+                    currentClickState = ClickState.None;
+
+                    //Debug.Log("그리기 완료");
+
+                    // temp 지우기
+                    GameObject temp = GameObject.FindGameObjectWithTag("Temp");
+
+                    for (int i = 0; i < temp.transform.childCount; i++)
                     {
-                        currentClickState = ClickState.None;
-                        //Debug.Log("그리기 취소");
-                        return;
+                        GameObject roadToDelete = temp.transform.GetChild(i).gameObject;
+                        DeleteRoad(roadToDelete.GetComponent<Road>().coordinate.x, roadToDelete.GetComponent<Road>().coordinate.z);
+                        Destroy(roadToDelete);
                     }
 
-                    if (currentClickState == ClickState.Create) // 도로를 연결할 건물 선택 (도로 생성)
-                    {
-                        currentClickState = ClickState.None;
+                    GameManager.instance.roadCount -= 1;
 
-                        //Debug.Log("그리기 완료");
-
-                        // temp 지우기
-                        GameObject temp = GameObject.FindGameObjectWithTag("Temp");
-
-                        for (int i = 0; i < temp.transform.childCount; i++)
-                        {
-                            GameObject roadToDelete = temp.transform.GetChild(0).gameObject;
-                            DeleteRoad(roadToDelete.GetComponent<Road>().coordinate.x, roadToDelete.GetComponent<Road>().coordinate.z);
-                            Destroy(roadToDelete);
-                        }
-
-                        //Road_Optimize(3);
-                        MeasureRoad(false);
-                    }
+                    //Road_Optimize(3);
+                    MeasureRoad(false);
                 }
             }
             else // 건물 이외에서 마우스 떼기
@@ -159,6 +168,7 @@ public class RoadControl : MonoBehaviour
                 if (currentClickState == ClickState.Create)
                 {
                     currentClickState = ClickState.None;
+                    coordinates.Clear();
                     //Debug.Log("그리기 취소");
                 }
             }
@@ -175,54 +185,39 @@ public class RoadControl : MonoBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                if (hit.collider.CompareTag("Road"))
+                if (hit.collider.CompareTag("Road") && hit.collider.GetComponent<Road>().roadType == RoadType.BuildingTile)
                 {
-                    if (hit.collider.GetComponent<Road>().roadType == RoadType.BuildingTile)
+                    float newX = hit.collider.transform.position.x;
+                    float newZ = hit.collider.transform.position.z;
+
+                    for (float i = Mathf.Round(hit.collider.transform.position.x) - 1; i <= Mathf.Round(hit.collider.transform.position.x) + 1; i += 0.25f)
                     {
-                        float newX = hit.collider.transform.position.x;
-                        float newZ = hit.collider.transform.position.z;
-
-                        for (float i = Mathf.Round(hit.collider.transform.position.x) - 1; i <= Mathf.Round(hit.collider.transform.position.x) + 1; i += 0.25f)
+                        if (Mathf.Abs(i - hit.collider.transform.position.x) <= 1.25f && i % 2.5f == 0)
                         {
-                            if (Mathf.Abs(i - hit.collider.transform.position.x) <= 1.25f && i % 2.5f == 0)
-                            {
-                                newX = i;
-                                break;
-                            }
-                        }
-
-                        for (float i = Mathf.Round(hit.collider.transform.position.z) - 1; i <= Mathf.Round(hit.collider.transform.position.z) + 1; i += 0.25f)
-                        {
-                            if (Mathf.Abs(i - (hit.collider.transform.position.z)) <= 1.25f && i % 2.5f == 0)
-                            {
-                                newZ = i;
-                                break;
-                            }
-                        }
-
-                        if (newX != endPoint.x || newZ != endPoint.z)
-                        {
-                            endPoint.x = newX;
-                            endPoint.z = newZ;
-                        }
-
-                        // 생성
-                        if (!(startPoint.x == endPoint.x && startPoint.z == endPoint.z))
-                        {
-                            MeasureRoad(true);
+                            newX = i;
+                            break;
                         }
                     }
-                    else
-                    {
-                        // temp 지우기
-                        GameObject temp = GameObject.FindGameObjectWithTag("Temp");
 
-                        for (int i = 0; i < temp.transform.childCount; i++)
+                    for (float i = Mathf.Round(hit.collider.transform.position.z) - 1; i <= Mathf.Round(hit.collider.transform.position.z) + 1; i += 0.25f)
+                    {
+                        if (Mathf.Abs(i - (hit.collider.transform.position.z)) <= 1.25f && i % 2.5f == 0)
                         {
-                            GameObject roadToDelete = temp.transform.GetChild(0).gameObject;
-                            DeleteRoad(roadToDelete.GetComponent<Road>().coordinate.x, roadToDelete.GetComponent<Road>().coordinate.z);
-                            Destroy(roadToDelete);
+                            newZ = i;
+                            break;
                         }
+                    }
+
+                    if (newX != endPoint.x || newZ != endPoint.z)
+                    {
+                        endPoint.x = newX;
+                        endPoint.z = newZ;
+                    }
+
+                    // 생성
+                    if (!(startPoint.x == endPoint.x && startPoint.z == endPoint.z))
+                    {
+                        MeasureRoad(true);
                     }
                 }
                 else
@@ -236,6 +231,10 @@ public class RoadControl : MonoBehaviour
                         DeleteRoad(roadToDelete.GetComponent<Road>().coordinate.x, roadToDelete.GetComponent<Road>().coordinate.z);
                         Destroy(roadToDelete);
                     }
+
+                    coordinates.Clear();
+
+                    return;
                 }
             }
         }
@@ -486,6 +485,7 @@ public class RoadControl : MonoBehaviour
             Check_Additonal_Diagonal();
         }
 
+        // 더 빠른 도로가 있으면 생성 X
         if (GameManager.instance.CheckCanReach(startPoint.x, startPoint.z, endPoint.x, endPoint.z, roads, out int count_original))
         {
             // 비교 시작
@@ -773,15 +773,18 @@ public class RoadControl : MonoBehaviour
             if (!roads.Contains(coordinates[i])) // 해당 위치에 이미 도로가 생성되어있는지 체크
             {
                 roads.Add(coordinates[i]);
-                GameObject currentRoad = Instantiate(roadPrefabs[4], new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
-                
+
+                GameObject currentRoad;
+
                 if (isTest)
                 {
-                    currentRoad.transform.SetParent(GameObject.FindGameObjectWithTag("Temp").transform);
+                    currentRoad = Instantiate(tempRoadPrefab, new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
+                    currentRoad.transform.SetParent(tempParent);
                 }
                 else
                 {
-                    currentRoad.transform.SetParent(transform);
+                    currentRoad = Instantiate(roadPrefab, new Vector3(coordinates[i].x, 0.01f, coordinates[i].z), Quaternion.identity);
+                    currentRoad.transform.SetParent(roadParent);
                 }
                 
                 currentRoad.GetComponent<Road>().coordinate.x = coordinates[i].x;
@@ -789,10 +792,20 @@ public class RoadControl : MonoBehaviour
             }
         }
 
-        // 도로 최적화
-        //DeleteOverlapRoad();
-
         coordinates.Clear();
+    }
+
+    public bool CheckRoadExist(float x, float z)
+    {
+        for (int i = 0; i < roads.Count; i++)
+        {
+            if (roads[i].x == x && roads[i].z == z)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void DeleteRoad(float x, float z) // 해당 좌표를 roads에서 제거

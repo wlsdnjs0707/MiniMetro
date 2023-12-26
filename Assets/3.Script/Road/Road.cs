@@ -7,6 +7,7 @@ public class Road : MonoBehaviour
     [Header("Road Info")]
     public RoadType roadType;
     public Coordinate coordinate;
+    public BuildingType buildingType = BuildingType.None;
 
     [Header("Road Prefab")]
     [SerializeField] private Mesh[] roadMeshs; // <Index> 0:Straight, 1:Corner, 2:Intersection, 3:BuildingTile, 4:Test
@@ -17,7 +18,7 @@ public class Road : MonoBehaviour
         RoadControl.instance.OnRoadCreated += ChangeType;
 
         // 최초 생성시 호출
-        Invoke("ChangeType", 0.01f);
+        Invoke(nameof(ChangeType), 0.01f);
     }
 
     private void OnDestroy()

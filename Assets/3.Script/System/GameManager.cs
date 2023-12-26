@@ -22,6 +22,10 @@ public class GameManager : MonoBehaviour
     private Queue<Coordinate> queue = new Queue<Coordinate>(); // 다음 방문할 좌표를 담을 큐
     private Dictionary<Coordinate, bool> visited = new Dictionary<Coordinate, bool>(); // 방문 체크용 딕셔너리
 
+    [Header("System")]
+    public float score = 0;
+    public int roadCount = 0;
+
     public bool CheckCanReach(float startPointX, float startPointZ, float endPointX, float endPointZ, List<Coordinate> coordinates, out int count)
     {
         // 상하좌우 체크용 인덱스
