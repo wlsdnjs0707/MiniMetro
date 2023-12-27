@@ -6,10 +6,9 @@ public class RoundControl : MonoBehaviour
 {
     private void Start()
     {
-        BuildingSpawn.instance.SpawnBuilding();
-        BuildingSpawn.instance.SpawnBuilding();
-
-        GameManager.instance.roadCount += 1;
+        BuildingSpawn.instance.InitBuilding();
+        GameManager.instance.ChangeRoadCount(2);
+        GameManager.instance.ChangeBusCount(2);
     }
 
     private void StartRound()

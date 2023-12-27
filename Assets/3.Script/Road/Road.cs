@@ -29,6 +29,11 @@ public class Road : MonoBehaviour
 
     private void ChangeType()
     {
+        if (roadType == RoadType.BuildingTile)
+        {
+            return;
+        }
+
         // 상하좌우 체크용 인덱스
         float[] nx = { 0, 0, -2.5f, 2.5f };
         float[] nz = { -2.5f, 2.5f, 0, 0 };

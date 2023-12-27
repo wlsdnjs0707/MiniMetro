@@ -25,6 +25,11 @@ public class BuildingSpawn : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        for (int i = 0; i < 5; i++)
+        {
+            buildingInfo.Add((BuildingType)i, 0);
+        }
     }
 
     [Header("Spawn Setting")]
@@ -52,11 +57,52 @@ public class BuildingSpawn : MonoBehaviour
         }
     }
 
-    private void Start()
+    public void InitBuilding()
     {
-        for (int i = 0; i < 5; i++)
+        int type_else = Random.Range(1, 5);
+
+        for (int i = 1; i < 5; i++)
         {
-            buildingInfo.Add((BuildingType)i, 0);
+            if (i != type_else)
+            {
+                int count = 0;
+
+                while (count < 100)
+                {
+                    spawnPoint.x = Random.Range((int)startSpawnPosition.x / spawnDistance, (int)endSpawnPosition.x / spawnDistance + 1) * spawnDistance;
+                    spawnPoint.z = Random.Range((int)startSpawnPosition.z / spawnDistance, (int)endSpawnPosition.z / spawnDistance + 1) * spawnDistance;
+
+                    if (!RoadControl.instance.CheckRoadExist(spawnPoint.x, spawnPoint.z))
+                    {
+                        break;
+                    }
+
+                    count += 1;
+                }
+
+                if (count >= 100)
+                {
+                    return;
+                }
+
+                // 건물
+                GameObject currentBuilding = Instantiate(buildingPrefabs[i - 1], new Vector3(spawnPoint.x, 0, spawnPoint.z), Quaternion.identity);
+                currentBuilding.transform.SetParent(buildingParent);
+
+                // 도로
+                GameObject currentRoad = Instantiate(roadPrefab, new Vector3(spawnPoint.x, 0.01f, spawnPoint.z), Quaternion.identity);
+                currentRoad.transform.SetParent(roadParent);
+                currentRoad.GetComponent<Road>().roadType = RoadType.BuildingTile;
+                currentRoad.GetComponent<Road>().coordinate.x = spawnPoint.x;
+                currentRoad.GetComponent<Road>().coordinate.z = spawnPoint.z;
+                currentRoad.GetComponent<Road>().buildingType = (BuildingType)i;
+                currentRoad.GetComponent<PassengerSpawn>().StartSpawn();
+                RoadControl.instance.roads.Add(new Coordinate(spawnPoint.x, spawnPoint.z));
+
+                currentRoad.GetComponent<PassengerSpawn>().canvas = currentBuilding.transform.GetChild(0).gameObject;
+
+                buildingInfo[(BuildingType)i] += 1;
+            }
         }
     }
 

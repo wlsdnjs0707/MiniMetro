@@ -16,7 +16,7 @@ public enum RoadType
 public enum ClickState
 { 
     None, // 초기 상태
-    Create // 도로를 그리는 중
+    Create, // 도로를 그리는 중
 }
 
 [Serializable]
@@ -57,6 +57,7 @@ public class RoadControl : MonoBehaviour
 
     [Header("Click State")]
     public ClickState currentClickState = ClickState.None;
+    public bool canDraw = false;
 
     [Header("Point")]
     public Vector3 startPoint = Vector3.zero;
@@ -81,6 +82,11 @@ public class RoadControl : MonoBehaviour
 
     private void GetMouseInput()
     {
+        if (!canDraw)
+        {
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             StartDraw();
@@ -157,7 +163,7 @@ public class RoadControl : MonoBehaviour
                         Destroy(roadToDelete);
                     }
 
-                    GameManager.instance.roadCount -= 1;
+                    GameManager.instance.ChangeRoadCount(-1);
 
                     //Road_Optimize(3);
                     MeasureRoad(false);

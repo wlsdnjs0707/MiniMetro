@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4199163040436383906
+--- !u!1 &688421855539299857
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,51 +8,50 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4199163040436808834}
-  - component: {fileID: 4199163040435481762}
-  - component: {fileID: 4199163040434384482}
-  - component: {fileID: 8071276382664637156}
-  - component: {fileID: -3944878989305031712}
+  - component: {fileID: 688421855539665457}
+  - component: {fileID: 688421855542565393}
+  - component: {fileID: 688421855541565649}
+  - component: {fileID: 688421855539299856}
   m_Layer: 0
-  m_Name: Temp Road Tile
+  m_Name: Bus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4199163040436808834
+--- !u!4 &688421855539665457
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4199163040436383906}
-  m_LocalRotation: {x: 0.000000021855694, y: 0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.01, z: 0}
-  m_LocalScale: {x: 0.125, y: 0.125, z: 0.125}
+  m_GameObject: {fileID: 688421855539299857}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4199163040435481762
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!33 &688421855542565393
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4199163040436383906}
-  m_Mesh: {fileID: 4300000, guid: 7b654bd76adcefd44b4799d4290822fb, type: 3}
---- !u!23 &4199163040434384482
+  m_GameObject: {fileID: 688421855539299857}
+  m_Mesh: {fileID: 4300000, guid: 0d82ae0493e1c264bad0588fde0a3d8a, type: 3}
+--- !u!23 &688421855541565649
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4199163040436383906}
+  m_GameObject: {fileID: 688421855539299857}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
+  m_DynamicOccludee: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 1
@@ -61,7 +60,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0630a24c835528f4fa0538f14e58dcce, type: 2}
+  - {fileID: 2100000, guid: 8659c6f38f710284c9a623201882790c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -83,39 +82,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &8071276382664637156
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4199163040436383906}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 20, y: 0.0000008742278, z: 20}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-3944878989305031712
+--- !u!114 &688421855539299856
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4199163040436383906}
+  m_GameObject: {fileID: 688421855539299857}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3929ad0c0ebdab44db83f904016452fe, type: 3}
+  m_Script: {fileID: 11500000, guid: 9cca4139ecb588448825359511fc449d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roadType: 4
-  coordinate:
-    x: 0
+  points:
+  - x: 0
     z: 0
-  buildingType: 0
-  roadMeshs:
-  - {fileID: 4300000, guid: e3c71c50de390ec4190b877211ba0717, type: 3}
-  - {fileID: 4300000, guid: b38a4b1b87a3b81429916ae40f4a3f6f, type: 3}
-  - {fileID: 4300000, guid: 11b7c9a58a603e74caec54e139efb58d, type: 3}
-  - {fileID: 4300000, guid: 7b654bd76adcefd44b4799d4290822fb, type: 3}
-  - {fileID: 4300000, guid: 7b654bd76adcefd44b4799d4290822fb, type: 3}
+  - x: 0
+    z: 0

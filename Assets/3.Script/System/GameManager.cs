@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -25,6 +26,12 @@ public class GameManager : MonoBehaviour
     [Header("System")]
     public float score = 0;
     public int roadCount = 0;
+    public int busCount = 0;
+
+    [Header("UI")]
+    [SerializeField] private Text roadCountText;
+    [SerializeField] private Text busCountText;
+    [SerializeField] private Text scoreText;
 
     public bool CheckCanReach(float startPointX, float startPointZ, float endPointX, float endPointZ, List<Coordinate> coordinates, out int count)
     {
@@ -76,5 +83,23 @@ public class GameManager : MonoBehaviour
         visited.Clear();
         count = moveCount;
         return false;
+    }
+
+    public void ChangeRoadCount(int count)
+    {
+        roadCount += count;
+        roadCountText.text = $"{roadCount}";
+    }
+
+    public void ChangeBusCount(int count)
+    {
+        busCount += count;
+        busCountText.text = $"{busCount}";
+    }
+
+    public void ChangeScore(float score)
+    {
+        this.score += score;
+        scoreText.text = $"Score : {(int)score}";
     }
 }
