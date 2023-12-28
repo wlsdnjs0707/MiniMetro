@@ -16,11 +16,6 @@ public class BusSpawn : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        routes[0] = new List<Coordinate>();
-        routes[1] = new List<Coordinate>();
-
-        route_final = new List<Coordinate>();
     }
 
     [Header("Prefab")]
@@ -37,13 +32,12 @@ public class BusSpawn : MonoBehaviour
     // BFS
     private Queue<Coordinate> queue = new Queue<Coordinate>(); // 다음 방문할 좌표를 담을 큐
     private Dictionary<Coordinate, bool> visited = new Dictionary<Coordinate, bool>(); // 방문 체크용 딕셔너리
-    private List<Coordinate> bfsRoute = new List<Coordinate>();
-
-    // DFS
-    private List<Coordinate> route_final;
-    private List<Coordinate>[] routes = new List<Coordinate>[2];
     private Coordinate[] points = new Coordinate[2];
-    private int findCount = 0;
+
+    private List<Coordinate> route = new List<Coordinate>();
+    private List<Coordinate> temp = new List<Coordinate>();
+    private int shortestLength = int.MaxValue;
+    private int count = 0;
 
     private void Update()
     {
@@ -68,20 +62,27 @@ public class BusSpawn : MonoBehaviour
                     // 버스 생성
                     GameObject currentBus = Instantiate(busPrefab, hit.collider.transform.position, Quaternion.identity);
 
-                    //BFS
+                    // BFS로 가장 가까운 두 플랫폼 탐색
                     FindNearestPoints(hit.collider.transform.position.x, hit.collider.transform.position.z);
-                    // 이후 bfsRoute를 DFS하여 루트 정렬
 
-                    //DFS
-                    //FindRoute(hit.collider.transform.position.x, hit.collider.transform.position.z);
+                    // 이후 두 점의 최단 경로를 구함
+                    visited.Clear();
+                    temp.Clear();
+                    route.Clear();
+                    count = 0;
+                    FindShortestRoute(points[0].x, points[0].z);
 
-                    MakeFinalRoute();
+                    // 생성한 버스에 왕복할 두 지점과 최단 경로를 할당
                     currentBus.GetComponent<BusControl>().points[0] = points[0];
                     currentBus.GetComponent<BusControl>().points[1] = points[1];
+
+                    currentBus.GetComponent<BusControl>().buildingTypes[0] = RoadControl.instance.ReturnRoadAtPoint(points[0].x, points[0].z).gameObject.GetComponent<Road>().buildingType;
+                    currentBus.GetComponent<BusControl>().buildingTypes[1] = RoadControl.instance.ReturnRoadAtPoint(points[1].x, points[1].z).gameObject.GetComponent<Road>().buildingType;
+
                     currentBus.transform.SetParent(transform);
-                    for (int i = 0; i < route_final.Count; i++)
+                    for (int i = 0; i < route.Count; i++)
                     {
-                        currentBus.GetComponent<BusControl>().route.Add(route_final[i]);
+                        currentBus.GetComponent<BusControl>().route.Add(route[i]);
                     }
 
                     canvas.GetComponent<UIControl>().DisableBusButton();
@@ -99,7 +100,7 @@ public class BusSpawn : MonoBehaviour
         }
     }
 
-    private void FindNearestPoints(float x, float z)
+    private void FindNearestPoints(float x, float z) // BFS
     {
         // 상하좌우 체크용 인덱스
         float[] nx = { 0, 0, -2.5f, 2.5f };
@@ -120,8 +121,6 @@ public class BusSpawn : MonoBehaviour
 
             // 방문 체크
             visited[currentCoordinate] = true;
-
-            bfsRoute.Add(currentCoordinate);
 
             // BuildingTile인지 체크
             for (int i = 0; i < roads.transform.childCount; i++)
@@ -159,12 +158,9 @@ public class BusSpawn : MonoBehaviour
         }
     }
 
-    private void FindRoute(float x, float z)
+    private void FindShortestRoute(float x, float z) // 두 점의 최단 경로 구하기
     {
-        if (findCount >= 2)
-        {
-            return;
-        }
+        // points[0]부터 points[1]까지의 최단 경로 구하기
 
         // 상하좌우 체크용 인덱스
         float[] nx = { 0, 0, -2.5f, 2.5f };
@@ -172,21 +168,21 @@ public class BusSpawn : MonoBehaviour
 
         Coordinate currentCoordinate = new Coordinate(x, z);
         visited.Add(currentCoordinate, true);
-        routes[findCount].Add(currentCoordinate);
+        temp.Add(currentCoordinate);
+        count += 1;
 
-        GameObject roads = GameObject.FindGameObjectWithTag("Roads");
-
-        // BuildingTile인지 체크
-        for (int i = 0; i < roads.transform.childCount; i++)
+        if (x == points[1].x && z == points[1].z)
         {
-            Road road = roads.transform.GetChild(i).GetComponent<Road>();
-
-            if ((road.coordinate.x == currentCoordinate.x && road.coordinate.z == currentCoordinate.z) && road.roadType == RoadType.BuildingTile)
+            if (count < shortestLength)
             {
-                points[findCount].x = road.coordinate.x;
-                points[findCount].z = road.coordinate.z;
-                findCount += 1;
-                return;
+                count = shortestLength;
+
+                route.Clear();
+
+                for (int i = 0; i < temp.Count; i++)
+                {
+                    route.Add(temp[i]);
+                }
             }
         }
 
@@ -198,38 +194,14 @@ public class BusSpawn : MonoBehaviour
             {
                 if (!visited.ContainsKey(nextCoordinate)) // 방문하지 않은 도로라면
                 {
-                    FindRoute(nextCoordinate.x, nextCoordinate.z);
+                    FindShortestRoute(nextCoordinate.x, nextCoordinate.z);
                 }
             }
         }
-    }
 
-    private void MakeFinalRoute()
-    {
-        route_final.Clear();
-
-        for (int i = routes[0].Count - 1; i >= 0; i--)
-        {
-            route_final.Add(routes[0][i]);
-        }
-
-        for (int i = 0; i < routes[1].Count; i++)
-        {
-            route_final.Add(routes[1][i]);
-        }
-
-        routes[0].Clear();
-        routes[1].Clear();
-        visited.Clear();
-        findCount = 0;
-
-        // ---------- bfsRoute 정렬
-
-        
-    }
-
-    private void DFSForFinalRoute()
-    {
+        visited.Remove(currentCoordinate);
+        temp.Remove(currentCoordinate);
+        count -= 1;
 
     }
 

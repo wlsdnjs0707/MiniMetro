@@ -97,9 +97,9 @@ public class BuildingSpawn : MonoBehaviour
                 currentRoad.GetComponent<Road>().coordinate.z = spawnPoint.z;
                 currentRoad.GetComponent<Road>().buildingType = (BuildingType)i;
                 currentRoad.GetComponent<PassengerSpawn>().StartSpawn();
-                RoadControl.instance.roads.Add(new Coordinate(spawnPoint.x, spawnPoint.z));
-
                 currentRoad.GetComponent<PassengerSpawn>().canvas = currentBuilding.transform.GetChild(0).gameObject;
+
+                RoadControl.instance.roads.Add(new Coordinate(spawnPoint.x, spawnPoint.z));
 
                 buildingInfo[(BuildingType)i] += 1;
             }

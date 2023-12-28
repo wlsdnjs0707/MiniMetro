@@ -814,6 +814,23 @@ public class RoadControl : MonoBehaviour
         return false;
     }
 
+    public Road ReturnRoadAtPoint(float x, float z)
+    {
+        GameObject roads = GameObject.FindGameObjectWithTag("Roads");
+
+        for (int i = 0; i < roads.transform.childCount; i++)
+        {
+            Road road = roads.transform.GetChild(i).GetComponent<Road>();
+
+            if (road.coordinate.x == x && road.coordinate.z == z)
+            {
+                return road;
+            }
+        }
+
+        return null;
+    }
+
     private void DeleteRoad(float x, float z) // 해당 좌표를 roads에서 제거
     {
         for (int i = 0; i < roads.Count; i++)
