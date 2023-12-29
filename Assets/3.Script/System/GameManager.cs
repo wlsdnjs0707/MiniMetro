@@ -42,6 +42,11 @@ public class GameManager : MonoBehaviour
     [Header("Camera")]
     [SerializeField] private GameObject mainCamera;
 
+    private void Start()
+    {
+        GameStart();
+    }
+
     public bool CheckCanReach(float startPointX, float startPointZ, float endPointX, float endPointZ, List<Coordinate> coordinates, out int count)
     {
         // »óÇÏÁÂ¿ì Ã¼Å©¿ë ÀÎµ¦½º
@@ -113,13 +118,7 @@ public class GameManager : MonoBehaviour
         this.score += score;
         scoreText.text = $"Score : {(int)this.score}";
 
-        if (this.score == 300)
-        {
-            BuildingSpawn.instance.SpawnBuilding();
-            ChangeRoadCount(1);
-            ChangeBusCount(1);
-        }
-        else if (this.score == 500)
+        if (this.score == 500)
         {
             BuildingSpawn.instance.SpawnBuilding();
             ChangeRoadCount(1);
@@ -133,6 +132,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void GameStart()
+    {
+        BuildingSpawn.instance.InitBuilding();
+        GameManager.instance.ChangeRoadCount(2);
+        GameManager.instance.ChangeBusCount(2);
+    }
+
     public void GameOver(Vector3 position)
     {
         StartCoroutine(GameOver_co(position));
@@ -143,9 +149,6 @@ public class GameManager : MonoBehaviour
         Vignette vignette;
         volume.profile.TryGet(out vignette);
         float focusDistance = 10.0f;
-
-        /*ClampedFloatParameter focalLength;
-        volume.profile.TryGet(out focalLength);*/
 
         DepthOfField depthOfField;
         volume.profile.TryGet(out depthOfField);
@@ -162,13 +165,13 @@ public class GameManager : MonoBehaviour
 
             if (focusDistance > 0.01f)
             {
-                focusDistance -= Time.deltaTime;
+                focusDistance -= Time.deltaTime * 2.0f;
             }
             depthOfField.focusDistance.Override(focusDistance);
 
             if (intensity < 0.35f)
             {
-                intensity += Time.deltaTime;
+                intensity += Time.deltaTime * 0.1f;
             }
             vignette.intensity.Override(intensity);
 

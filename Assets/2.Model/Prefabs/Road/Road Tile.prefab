@@ -134,12 +134,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   passengers: []
   maxPassengerCount: 3
-  spawnTimer: 5
+  spawnTimer: 10
   canvas: {fileID: 0}
   colors:
   - {fileID: 21300000, guid: 22c7466bc997a3b4f92e1593394240e4, type: 3}
   - {fileID: 21300000, guid: 9bcc78111b0423f4ea09f16f42e5c5fc, type: 3}
   - {fileID: 21300000, guid: 93b698a32c73b194fa02df7d2f4ba72c, type: 3}
   - {fileID: 21300000, guid: d409cefa2ac81a94187c2506995ecb35, type: 3}
-  gameOverTime: 10
+  gameOverTime: 30
   isTransporting: 0
